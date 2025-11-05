@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, Play, ExternalLink } from 'lucide-react';
 
-const SchedulerPanel = ({ enabled, setEnabled, weekday, setWeekday, time, setTime, athleteValid, sheetValid }) => {
-  const canActivate = useMemo(() => enabled ? athleteValid && sheetValid : true, [enabled, athleteValid, sheetValid]);
+const SchedulerPanel = ({ enabled, setEnabled, weekday, setWeekday, time, setTime, athleteValid, sheetValid, onLiveRun, onOpenFile }) => {
+  const canActivate = useMemo(() => (enabled ? athleteValid && sheetValid : true), [enabled, athleteValid, sheetValid]);
+  const canLiveRun = athleteValid && sheetValid;
 
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -63,6 +64,28 @@ const SchedulerPanel = ({ enabled, setEnabled, weekday, setWeekday, time, setTim
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={onLiveRun}
+          disabled={!canLiveRun}
+          className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition ${
+            canLiveRun ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-200 text-white cursor-not-allowed'
+          }`}
+        >
+          <Play className="h-4 w-4" />
+          Mise à jour en direct
+        </button>
+        <button
+          type="button"
+          onClick={onOpenFile}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Ouvrir le fichier
+        </button>
       </div>
 
       <div className="mt-5 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">

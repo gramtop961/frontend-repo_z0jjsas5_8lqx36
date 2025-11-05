@@ -22,8 +22,41 @@ function App() {
   const [weekday, setWeekday] = useState('monday');
   const [time, setTime] = useState('06:00');
 
+  const [logs, setLogs] = useState([]);
+
   const athleteValid = useMemo(() => isValidUrl(athleteUrl), [athleteUrl]);
   const sheetValid = useMemo(() => isValidUrl(sheetUrl), [sheetUrl]);
+
+  const addLog = (type, message) => {
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    setLogs((prev) => [
+      { id: `${now.getTime()}-${Math.random().toString(36).slice(2, 6)}`, type, date, message },
+      ...prev,
+    ]);
+  };
+
+  const handleLiveRun = () => {
+    if (!athleteValid || !sheetValid) {
+      addLog('warning', "Action bloquée: fournissez des URLs valides pour le profil et la feuille.");
+      return;
+    }
+    // Simulation d'une exécution: on ajoute une entrée de succès
+    addLog('success', "Simulation: feuille mise à jour avec les derniers meilleurs temps (exécution à la demande)");
+  };
+
+  const handleOpenFile = () => {
+    if (!sheetValid) {
+      addLog('warning', "URL Google Sheets invalide ou absente.");
+      return;
+    }
+    try {
+      window.open(sheetUrl, '_blank', 'noopener,noreferrer');
+      addLog('info', 'Ouverture de la feuille Google dans un nouvel onglet.');
+    } catch (e) {
+      addLog('warning', "Impossible d'ouvrir la feuille. Vérifiez votre navigateur ou le lien.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-sky-50 to-purple-50">
@@ -58,11 +91,13 @@ function App() {
               setTime={setTime}
               athleteValid={athleteValid}
               sheetValid={sheetValid}
+              onLiveRun={handleLiveRun}
+              onOpenFile={handleOpenFile}
             />
           </div>
 
           <div className="space-y-6">
-            <StatusLog />
+            <StatusLog logs={logs} />
             <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-base font-semibold text-gray-900">Résumé</h3>
               <ul className="mt-3 space-y-2 text-sm text-gray-700">
