@@ -28,7 +28,7 @@ const SetupForm = ({ athleteUrl, setAthleteUrl, sheetUrl, setSheetUrl, sheetTab,
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">URL du profil nageuse (Swimrankings)</label>
+          <label className="mb-2 block text-sm font-medium text-gray-700">URL du profil nageur·euse (Swimrankings)</label>
           <div className="relative">
             <input
               type="url"
