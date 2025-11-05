@@ -3,6 +3,7 @@ import Header from './components/Header.jsx';
 import SetupForm from './components/SetupForm.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import StatusLog from './components/StatusLog.jsx';
+import UpdatedRows from './components/UpdatedRows.jsx';
 
 const isValidUrl = (str) => {
   try {
@@ -23,6 +24,8 @@ function App() {
   const [time, setTime] = useState('06:00');
 
   const [logs, setLogs] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const athleteValid = useMemo(() => isValidUrl(athleteUrl), [athleteUrl]);
   const sheetValid = useMemo(() => isValidUrl(sheetUrl), [sheetUrl]);
@@ -36,13 +39,45 @@ function App() {
     ]);
   };
 
-  const handleLiveRun = () => {
+  const handleLiveRun = async () => {
     if (!athleteValid || !sheetValid) {
       addLog('warning', "Action bloquée: fournissez des URLs valides pour le profil et la feuille.");
       return;
     }
-    // Simulation d'une exécution: on ajoute une entrée de succès
-    addLog('success', "Simulation: feuille mise à jour avec les derniers meilleurs temps (exécution à la demande)");
+
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+    setLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/live-update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          athlete_url: athleteUrl,
+          sheet_url: sheetUrl,
+          sheet_tab: sheetTab || 'Feuille',
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        const detail = errorData?.detail || res.statusText;
+        addLog('warning', `Échec de la mise à jour: ${detail}`);
+        setLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      setRows(data.rows || []);
+      if (data.updated_count > 0) {
+        addLog('success', data.message || 'Mise à jour effectuée avec succès.');
+      } else {
+        addLog('info', 'Aucun changement détecté lors de cette exécution.');
+      }
+    } catch (e) {
+      addLog('warning', `Erreur réseau: ${(e && e.message) || 'inconnue'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOpenFile = () => {
@@ -94,6 +129,8 @@ function App() {
               onLiveRun={handleLiveRun}
               onOpenFile={handleOpenFile}
             />
+
+            <UpdatedRows rows={rows} />
           </div>
 
           <div className="space-y-6">
@@ -125,7 +162,7 @@ function App() {
                 </li>
               </ul>
               <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
-                Remarque: cette démo présente l'interface. L'exécution réelle s'appuiera sur un service côté serveur pour lire Swimrankings et écrire dans Google Sheets de manière sécurisée.
+                {loading ? 'Exécution en cours…' : "Remarque: cette démo présente l'interface. L'exécution réelle s'appuiera sur un service côté serveur pour lire Swimrankings et écrire dans Google Sheets de manière sécurisée."}
               </div>
             </section>
           </div>
