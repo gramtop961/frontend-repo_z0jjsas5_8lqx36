@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import Header from './components/Header.jsx';
 import SetupForm from './components/SetupForm.jsx';
-import SchedulerPanel from './components/SchedulerPanel.jsx';
 import StatusLog from './components/StatusLog.jsx';
 import UpdatedRows from './components/UpdatedRows.jsx';
+import { Play, ExternalLink } from 'lucide-react';
 
 const isValidUrl = (str) => {
   try {
@@ -18,10 +18,6 @@ function App() {
   const [athleteUrl, setAthleteUrl] = useState('https://www.swimrankings.net/index.php?page=athleteDetail&athleteId=4982954');
   const [sheetUrl, setSheetUrl] = useState('https://docs.google.com/spreadsheets/d/16eshLmn_ZI06iqt4mPQs1PPmRBMI2eWUrPr_OHnK7Gg/edit?gid=2117770580');
   const [sheetTab, setSheetTab] = useState('MPP Alessia');
-
-  const [enabled, setEnabled] = useState(false);
-  const [weekday, setWeekday] = useState('monday');
-  const [time, setTime] = useState('06:00');
 
   const [logs, setLogs] = useState([]);
   const [rows, setRows] = useState([]);
@@ -82,7 +78,7 @@ function App() {
 
   const handleOpenFile = () => {
     if (!sheetValid) {
-      addLog('warning', "URL Google Sheets invalide ou absente.");
+      addLog('warning', 'URL Google Sheets invalide ou absente.');
       return;
     }
     try {
@@ -101,8 +97,7 @@ function App() {
         <div className="mb-8 rounded-2xl border border-indigo-100 bg-white/70 p-6 shadow-sm backdrop-blur">
           <h2 className="text-lg font-semibold text-gray-900">Automatisation hebdomadaire des meilleurs temps</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Cette interface vous permet de configurer une tâche qui vérifie chaque semaine les meilleures performances sur Swimrankings
-            et met à jour votre feuille Google, en mettant en évidence les nouveaux temps pendant 4 semaines.
+            Configurez la source Swimrankings et la feuille Google à tenir à jour. Lancez une « Mise à jour en direct » pour synchroniser.
           </p>
         </div>
 
@@ -117,18 +112,40 @@ function App() {
               setSheetTab={setSheetTab}
             />
 
-            <SchedulerPanel
-              enabled={enabled}
-              setEnabled={setEnabled}
-              weekday={weekday}
-              setWeekday={setWeekday}
-              time={time}
-              setTime={setTime}
-              athleteValid={athleteValid}
-              sheetValid={sheetValid}
-              onLiveRun={handleLiveRun}
-              onOpenFile={handleOpenFile}
-            />
+            <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">Actions rapides</h3>
+                  <p className="text-sm text-gray-500">Exécutez une synchronisation à la demande ou ouvrez la feuille</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleLiveRun}
+                    disabled={!athleteValid || !sheetValid || loading}
+                    className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition ${
+                      athleteValid && sheetValid && !loading
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        : 'bg-indigo-200 text-white cursor-not-allowed'
+                    }`}
+                  >
+                    <Play className="h-4 w-4" />
+                    {loading ? 'Exécution…' : 'Mise à jour en direct'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleOpenFile}
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Ouvrir la feuille
+                  </button>
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+                {loading ? 'Exécution en cours…' : "Astuce: vous pouvez lancer une exécution manuelle à tout moment pour vérifier les dernières performances et mettre à jour la feuille."}
+              </div>
+            </section>
 
             <UpdatedRows rows={rows} />
           </div>
@@ -153,17 +170,7 @@ function App() {
                   )}
                 </li>
                 <li>Onglet: <span className="font-medium">{sheetTab || '—'}</span></li>
-                <li>
-                  Planification: {enabled ? (
-                    <span className="text-green-700">activée ({weekday}, {time})</span>
-                  ) : (
-                    <span className="text-gray-600">désactivée</span>
-                  )}
-                </li>
               </ul>
-              <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
-                {loading ? 'Exécution en cours…' : "Remarque: cette démo présente l'interface. L'exécution réelle s'appuiera sur un service côté serveur pour lire Swimrankings et écrire dans Google Sheets de manière sécurisée."}
-              </div>
             </section>
           </div>
         </div>
